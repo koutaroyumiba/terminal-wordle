@@ -9,9 +9,10 @@ import (
 )
 
 type GameState struct {
-	answer   string
-	guesses  []string // len = attempts
-	alphabet []rune
+	answer         string
+	guesses        []string // len = attempts
+	guessesResults []string
+	alphabet       []rune
 }
 
 func InitGame(words []string) GameState {
@@ -56,10 +57,12 @@ func (g *GameState) Guess(guess string) (string, bool) {
 			guessIndexUsed = append(guessIndexUsed, index)
 			answerIndexUsed = append(answerIndexUsed, index)
 			guessResult[index] = green
+			g.alphabet[alphabetIndex] = char
 		}
 	}
 	// find all yellow
-	for gIndex, _ := range guess {
+	for gIndex, char := range guess {
+		alphabetIndex := char - 'a'
 		if !slices.Contains(guessIndexUsed, gIndex) {
 			for aIndex, _ := range g.answer {
 				if !slices.Contains(answerIndexUsed, aIndex) {
@@ -67,6 +70,7 @@ func (g *GameState) Guess(guess string) (string, bool) {
 						guessIndexUsed = append(guessIndexUsed, gIndex)
 						answerIndexUsed = append(answerIndexUsed, aIndex)
 						guessResult[gIndex] = yellow
+						g.alphabet[alphabetIndex] = char
 					}
 				}
 			}
@@ -74,6 +78,8 @@ func (g *GameState) Guess(guess string) (string, bool) {
 	}
 
 	completeResult := strings.Join(guessResult, "")
+	g.guessesResults = append(g.guessesResults, completeResult)
+
 	if completeResult == strings.Repeat(green, len(guess)) {
 		return completeResult, true
 	}
@@ -87,4 +93,12 @@ func (g GameState) GetAttempts() int {
 
 func (g GameState) GetLetters() string {
 	return string(g.alphabet)
+}
+
+func (g GameState) PrintBoard() {
+	fmt.Printf("== board (attempt %d) ==\n", len(g.guesses)+1)
+	for index, _ := range g.guesses {
+		fmt.Printf("\t%s\n", g.guesses[index])
+		fmt.Printf("\t%s\n", g.guessesResults[index])
+	}
 }

@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func Preprocess() []string {
-	file, err := os.Open("valid-wordle-words.txt")
+func ProcessFile(filename string) []string {
+	file, err := os.Open(filename)
 	if err != nil {
 		log.Fatal(err)
 	}
