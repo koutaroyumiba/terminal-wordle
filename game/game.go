@@ -71,6 +71,7 @@ func (g *GameState) Guess(guess string) (string, bool) {
 						answerIndexUsed = append(answerIndexUsed, aIndex)
 						guessResult[gIndex] = yellow
 						g.alphabet[alphabetIndex] = char
+						break
 					}
 				}
 			}
