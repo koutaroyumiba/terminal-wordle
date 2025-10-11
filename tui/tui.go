@@ -72,19 +72,6 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-func runeSliceToString(rs []rune) string {
-	return string(rs)
-}
-
-func containsWord(list []string, word string) bool {
-	for _, w := range list {
-		if strings.EqualFold(w, word) {
-			return true
-		}
-	}
-	return false
-}
-
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.done {
 		// respond to q to quit or r to restart, or any key to exit
@@ -128,15 +115,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.message = fmt.Sprintf("Guess must be %d letters.", wordLength)
 				return m, nil
 			}
-			guess := runeSliceToString(m.current)
+			guess := string(m.current)
 
-			// TODO: need to be refactored - evaluation should be done in GameState
-			choiceWords := []string{"apple"}
+			validateRes, errMsg := m.gameState.ValidateWord(guess)
 
-			if m.allowDictionary && !containsWord(choiceWords, guess) {
-				m.message = "Not in word list."
+			if !validateRes {
+				m.message = errMsg
 				return m, nil
 			}
+
 			// evaluate
 			states, _ := m.gameState.EvaluateGuess(guess)
 			for i := range wordLength {

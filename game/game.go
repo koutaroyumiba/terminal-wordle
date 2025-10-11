@@ -3,12 +3,16 @@ package game
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"time"
 )
 
 type CellState int
 
-var inputFile string = "data/wordle-answers-alphabetical.txt"
+var (
+	inputFile  = "data/wordle-answers-alphabetical.txt"
+	dictionary = ProcessFile(inputFile)
+)
 
 const (
 	StateEmpty CellState = iota
@@ -23,20 +27,23 @@ type Cell struct {
 }
 
 type GameState struct {
-	answer         string
-	guessesResults [][]Cell
-	knownLetters   map[rune]CellState
+	answer          string
+	guessesResults  [][]Cell
+	knownLetters    map[rune]CellState
+	wordLength      int
+	allowDictionary bool
 }
 
 func InitGame(wordLength, maxGuesses int) GameState {
-	words := ProcessFile(inputFile)
-	secret := pickRandomWord(words)
+	secret := pickRandomWord(dictionary)
 	board := initialiseEmptyBoard(wordLength, maxGuesses)
 
 	return GameState{
-		answer:         secret,
-		guessesResults: board,
-		knownLetters:   make(map[rune]CellState),
+		answer:          secret,
+		guessesResults:  board,
+		knownLetters:    make(map[rune]CellState),
+		wordLength:      wordLength,
+		allowDictionary: true,
 	}
 }
 
@@ -58,9 +65,11 @@ func InitGameWithWord(wordLength, maxGuesses int, correctWord string) GameState 
 	board := initialiseEmptyBoard(wordLength, maxGuesses)
 
 	return GameState{
-		answer:         correctWord,
-		guessesResults: board,
-		knownLetters:   make(map[rune]CellState),
+		answer:          correctWord,
+		guessesResults:  board,
+		knownLetters:    make(map[rune]CellState),
+		wordLength:      wordLength,
+		allowDictionary: true,
 	}
 }
 
@@ -75,6 +84,18 @@ func initialiseEmptyBoard(wordLength, maxGuesses int) [][]Cell {
 	}
 
 	return board
+}
+
+func (g GameState) ValidateWord(word string) (bool, string) {
+	if len(word) != g.wordLength {
+		return false, fmt.Sprintf("guess must be %d letters", g.wordLength)
+	}
+
+	if g.allowDictionary && !slices.Contains(dictionary, word) {
+		return false, "not in word list"
+	}
+
+	return true, ""
 }
 
 func (g *GameState) EvaluateGuess(guess string) ([]CellState, bool) {
