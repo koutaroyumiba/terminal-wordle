@@ -3,8 +3,6 @@ package game
 import (
 	"fmt"
 	"math/rand"
-	"slices"
-	"strings"
 	"time"
 )
 
@@ -20,7 +18,7 @@ const (
 type GameState struct {
 	answer         string
 	guesses        []string // len = attempts
-	guessesResults []string
+	guessesResults [][]CellState
 	alphabet       []rune
 }
 
@@ -47,55 +45,46 @@ func InitGameWithWord(correctWord string) GameState {
 	}
 }
 
-func (g *GameState) Guess(guess string) (string, bool) {
+func (g *GameState) Guess(guess string) ([]CellState, bool) {
 	g.guesses = append(g.guesses, guess)
 
-	green := "x"
-	yellow := "^"
-	black := "-"
-
-	guessResult := []string{black, black, black, black, black}
-	guessIndexUsed := []int{}
-	answerIndexUsed := []int{}
+	guessResult := make([]CellState, len(guess))
+	answerRunes := []rune(g.answer)
+	guessRunes := []rune(guess)
+	counts := map[rune]int{}
 
 	// find all green
-	for index, char := range guess {
-		alphabetIndex := char - 'a'
-		g.alphabet[alphabetIndex] = '-'
-		if guess[index] == g.answer[index] && !slices.Contains(guessIndexUsed, index) {
-			guessIndexUsed = append(guessIndexUsed, index)
-			answerIndexUsed = append(answerIndexUsed, index)
-			guessResult[index] = green
-			g.alphabet[alphabetIndex] = char
+	for i := range len(guess) {
+		if answerRunes[i] == guessRunes[i] {
+			guessResult[i] = StateCorrect
+		} else {
+			counts[answerRunes[i]]++
 		}
 	}
 
-	// find all yellow
-	for gIndex, char := range guess {
-		alphabetIndex := char - 'a'
-		if !slices.Contains(guessIndexUsed, gIndex) {
-			for aIndex, _ := range g.answer {
-				if !slices.Contains(answerIndexUsed, aIndex) {
-					if guess[gIndex] == g.answer[aIndex] {
-						guessIndexUsed = append(guessIndexUsed, gIndex)
-						answerIndexUsed = append(answerIndexUsed, aIndex)
-						guessResult[gIndex] = yellow
-						g.alphabet[alphabetIndex] = char
-						break
-					}
-				}
-			}
+	// second pass
+	for i := range len(guess) {
+		if guessResult[i] == StateCorrect {
+			continue
+		}
+
+		if counts[guessRunes[i]] > 0 {
+			guessResult[i] = StatePresent
+			counts[guessRunes[i]]--
+		} else {
+			guessResult[i] = StateAbsent
 		}
 	}
 
-	completeResult := strings.Join(guessResult, "")
-	g.guessesResults = append(g.guessesResults, completeResult)
+	g.guessesResults = append(g.guessesResults, guessResult)
 
-	if completeResult == strings.Repeat(green, len(guess)) {
-		return completeResult, true
+	for _, s := range guessResult {
+		if s != StateCorrect {
+			return guessResult, false
+		}
 	}
 
-	return completeResult, false
+	return guessResult, true
 }
 
 func (g GameState) GetAttempts() int {
@@ -110,6 +99,6 @@ func (g GameState) PrintBoard() {
 	fmt.Printf("== board (attempt %d) ==\n", len(g.guesses)+1)
 	for index, _ := range g.guesses {
 		fmt.Printf("\t%s\n", g.guesses[index])
-		fmt.Printf("\t%s\n", g.guessesResults[index])
+		fmt.Printf("\t%p\n", g.guessesResults[index])
 	}
 }
