@@ -8,6 +8,15 @@ import (
 	"time"
 )
 
+type CellState int
+
+const (
+	StateEmpty CellState = iota
+	StateCorrect
+	StatePresent
+	StateAbsent
+)
+
 type GameState struct {
 	answer         string
 	guesses        []string // len = attempts
@@ -60,6 +69,7 @@ func (g *GameState) Guess(guess string) (string, bool) {
 			g.alphabet[alphabetIndex] = char
 		}
 	}
+
 	// find all yellow
 	for gIndex, char := range guess {
 		alphabetIndex := char - 'a'
