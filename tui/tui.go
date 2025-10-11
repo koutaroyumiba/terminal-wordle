@@ -181,7 +181,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if allCorrect(states) {
 				m.done = true
 				m.win = true
-				m.message = fmt.Sprintf("You won! Secret: %s — Press r to play again, q to quit.", m.secret)
+				m.message = ""
 				return m, nil
 			}
 			m.row++
@@ -189,7 +189,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.row >= maxGuesses {
 				m.done = true
 				m.win = false
-				m.message = fmt.Sprintf("Out of guesses! Secret: %s — Press r to play again, q to quit.", m.secret)
+				m.message = ""
 				return m, nil
 			}
 			m.message = ""
@@ -273,8 +273,8 @@ func renderKeyboard(known map[rune]game.CellState) string {
 
 func (m model) View() string {
 	var b strings.Builder
-	b.WriteString(headerStyle.Render("Wordle — Bubble Tea TUI\n"))
-	b.WriteString("Press ctrl+c to quit. r = restart. Enter = submit.\n\n")
+	b.WriteString(headerStyle.Render("Wordle"))
+	b.WriteString("\n")
 
 	// render guesses so far
 	for i := range maxGuesses {
@@ -300,20 +300,25 @@ func (m model) View() string {
 	b.WriteString(renderKeyboard(m.knownLetters))
 	b.WriteString("\n\n")
 
+	b.WriteString("input: ")
 	b.WriteString(string(m.current))
 	b.WriteString("\n\n")
 
 	// message
 	if m.message != "" {
+		b.WriteString("msg: ")
 		b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(m.message))
 		b.WriteString("\n")
 	}
 
+	winningStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#6aaa64"))
+	losingStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f87"))
+
 	if m.done {
 		if m.win {
-			b.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#6aaa64")).Render("\nCongratulations — you guessed it!\n"))
+			b.WriteString(winningStyle.Render("\ncongrats\n"))
 		} else {
-			b.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f87")).Render("\nBetter luck next time!\n"))
+			b.WriteString(losingStyle.Render(fmt.Sprintf("\ngg u suck, word: %s\n", m.secret)))
 		}
 		b.WriteString("\nPress r to play again, q to quit.\n")
 	}
