@@ -183,7 +183,7 @@ func renderCell(c cell) string {
 	case game.StateAbsent:
 		return grayStyle.Render(string(ch))
 	default:
-		return emptyStyle.Render(" ")
+		return emptyStyle.Render(string(ch))
 	}
 }
 
@@ -238,7 +238,7 @@ func (m model) View() string {
 				if j < len(m.current) {
 					line[j] = cell{r: m.current[j], s: game.StateEmpty}
 				} else {
-					line[j] = cell{r: 'x', s: game.StateEmpty}
+					line[j] = cell{r: ' ', s: game.StateEmpty}
 				}
 			}
 			b.WriteString(renderRow(line))
@@ -251,10 +251,6 @@ func (m model) View() string {
 	// keyboard
 	b.WriteString("Keyboard:\n")
 	b.WriteString(renderKeyboard(m.knownLetters))
-	b.WriteString("\n\n")
-
-	b.WriteString("input: ")
-	b.WriteString(string(m.current))
 	b.WriteString("\n\n")
 
 	// message
