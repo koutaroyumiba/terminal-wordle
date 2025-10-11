@@ -77,9 +77,7 @@ func initialiseEmptyBoard(wordLength, maxGuesses int) [][]Cell {
 	return board
 }
 
-func (g *GameState) Guess(guess string) ([]CellState, bool) {
-	// g.guesses = append(g.guesses, guess)
-
+func (g *GameState) EvaluateGuess(guess string) ([]CellState, bool) {
 	guessResult := make([]CellState, len(guess))
 	answerRunes := []rune(g.answer)
 	guessRunes := []rune(guess)
@@ -94,7 +92,7 @@ func (g *GameState) Guess(guess string) ([]CellState, bool) {
 		}
 	}
 
-	// second pass
+	// second pass (for yellow)
 	for i := range len(guess) {
 		if guessResult[i] == StateCorrect {
 			continue
@@ -108,15 +106,22 @@ func (g *GameState) Guess(guess string) ([]CellState, bool) {
 		}
 	}
 
-	// g.guessesResults = append(g.guessesResults, guessResult)
+	won := false
+	if isCorrectGuess(guessResult) {
+		won = true
+	}
 
-	for _, s := range guessResult {
+	return guessResult, won
+}
+
+func isCorrectGuess(guess []CellState) bool {
+	for _, s := range guess {
 		if s != StateCorrect {
-			return guessResult, false
+			return false
 		}
 	}
 
-	return guessResult, true
+	return true
 }
 
 // func (g GameState) GetAttempts() int {

@@ -85,36 +85,6 @@ func containsWord(list []string, word string) bool {
 	return false
 }
 
-func evaluateGuess(secret, guess string) []game.CellState {
-	res := make([]game.CellState, wordLength)
-	s := []rune(secret)
-	g := []rune(guess)
-
-	// counts for letters in secret that are not matched as green
-	counts := map[rune]int{}
-	for i := range wordLength {
-		if s[i] == g[i] {
-			res[i] = game.StateCorrect
-		} else {
-			counts[s[i]]++
-		}
-	}
-
-	// second pass for presents and absents
-	for i := range wordLength {
-		if res[i] == game.StateCorrect {
-			continue
-		}
-		if counts[g[i]] > 0 {
-			res[i] = game.StatePresent
-			counts[g[i]]--
-		} else {
-			res[i] = game.StateAbsent
-		}
-	}
-	return res
-}
-
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.done {
 		// respond to q to quit or r to restart, or any key to exit
@@ -168,7 +138,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			// evaluate
-			states := evaluateGuess(m.secret, guess)
+			states, _ := m.gameState.EvaluateGuess(guess)
 			for i := range wordLength {
 				m.guesses[m.row][i].r = m.current[i]
 				m.guesses[m.row][i].s = states[i]
