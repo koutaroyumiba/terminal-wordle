@@ -94,8 +94,6 @@ func containsWord(list []string, word string) bool {
 }
 
 func evaluateGuess(secret, guess string) []game.CellState {
-	// classic Wordle evaluation:
-	// first mark greens, then handle yellows with counts
 	res := make([]game.CellState, wordLength)
 	s := []rune(secret)
 	g := []rune(guess)
@@ -300,6 +298,9 @@ func (m model) View() string {
 	// keyboard
 	b.WriteString("Keyboard:\n")
 	b.WriteString(renderKeyboard(m.knownLetters))
+	b.WriteString("\n\n")
+
+	b.WriteString(string(m.current))
 	b.WriteString("\n\n")
 
 	// message
