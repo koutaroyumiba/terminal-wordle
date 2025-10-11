@@ -8,6 +8,8 @@ import (
 
 type CellState int
 
+var inputFile string = "data/wordle-answers-alphabetical.txt"
+
 const (
 	StateEmpty CellState = iota
 	StateCorrect
@@ -22,7 +24,8 @@ type GameState struct {
 	alphabet       []rune
 }
 
-func InitGame(words []string) GameState {
+func InitGame() GameState {
+	words := ProcessFile(inputFile)
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randomWord := "lmfao"
 	if len(words) > 0 {
