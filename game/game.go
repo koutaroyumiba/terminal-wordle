@@ -17,16 +17,32 @@ const (
 	StateAbsent
 )
 
-type GameState struct {
-	answer         string
-	guesses        []string // len = attempts
-	guessesResults [][]CellState
-	alphabet       []rune
+type Cell struct {
+	char  rune
+	state CellState
 }
 
-func InitGame() GameState {
+type GameState struct {
+	answer         string
+	guessesResults [][]Cell
+	knownLetters   map[rune]CellState
+}
+
+func InitGame(wordLength, maxGuesses int) GameState {
 	words := ProcessFile(inputFile)
+	secret := pickRandomWord(words)
+	board := initialiseEmptyBoard(wordLength, maxGuesses)
+
+	return GameState{
+		answer:         secret,
+		guessesResults: board,
+		knownLetters:   make(map[rune]CellState),
+	}
+}
+
+func pickRandomWord(words []string) string {
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	randomWord := "lmfao"
 	if len(words) > 0 {
 		randomWord = words[rng.Intn(len(words))]
@@ -35,21 +51,34 @@ func InitGame() GameState {
 		fmt.Println("no words found")
 	}
 
+	return randomWord
+}
+
+func InitGameWithWord(wordLength, maxGuesses int, correctWord string) GameState {
+	board := initialiseEmptyBoard(wordLength, maxGuesses)
+
 	return GameState{
-		answer:   randomWord,
-		alphabet: []rune("abcdefghijklmnopqrstuvwxyz"),
+		answer:         correctWord,
+		guessesResults: board,
+		knownLetters:   make(map[rune]CellState),
 	}
 }
 
-func InitGameWithWord(correctWord string) GameState {
-	return GameState{
-		answer:   correctWord,
-		alphabet: []rune("abcdefghijklmnopqrstuvwxyz"),
+func initialiseEmptyBoard(wordLength, maxGuesses int) [][]Cell {
+	board := make([][]Cell, maxGuesses)
+	for i := range maxGuesses {
+		line := make([]Cell, wordLength)
+		for j := range wordLength {
+			line[j] = Cell{char: ' ', state: StateEmpty}
+		}
+		board[i] = line
 	}
+
+	return board
 }
 
 func (g *GameState) Guess(guess string) ([]CellState, bool) {
-	g.guesses = append(g.guesses, guess)
+	// g.guesses = append(g.guesses, guess)
 
 	guessResult := make([]CellState, len(guess))
 	answerRunes := []rune(g.answer)
@@ -79,7 +108,7 @@ func (g *GameState) Guess(guess string) ([]CellState, bool) {
 		}
 	}
 
-	g.guessesResults = append(g.guessesResults, guessResult)
+	// g.guessesResults = append(g.guessesResults, guessResult)
 
 	for _, s := range guessResult {
 		if s != StateCorrect {
@@ -90,18 +119,22 @@ func (g *GameState) Guess(guess string) ([]CellState, bool) {
 	return guessResult, true
 }
 
-func (g GameState) GetAttempts() int {
-	return len(g.guesses)
-}
+// func (g GameState) GetAttempts() int {
+// 	return len(g.guesses)
+// }
+//
+// func (g GameState) GetLetters() string {
+// 	return string(g.alphabet)
+// }
+//
+// func (g GameState) PrintBoard() {
+// 	fmt.Printf("== board (attempt %d) ==\n", len(g.guesses)+1)
+// 	for index, _ := range g.guesses {
+// 		fmt.Printf("\t%s\n", g.guesses[index])
+// 		fmt.Printf("\t%p\n", g.guessesResults[index])
+// 	}
+// }
 
-func (g GameState) GetLetters() string {
-	return string(g.alphabet)
-}
-
-func (g GameState) PrintBoard() {
-	fmt.Printf("== board (attempt %d) ==\n", len(g.guesses)+1)
-	for index, _ := range g.guesses {
-		fmt.Printf("\t%s\n", g.guesses[index])
-		fmt.Printf("\t%p\n", g.guessesResults[index])
-	}
+func (g GameState) GetAnswer() string {
+	return g.answer
 }

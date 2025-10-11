@@ -3,9 +3,7 @@ package main
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -18,8 +16,6 @@ const (
 )
 
 var (
-	choiceWords = game.ProcessFile("data/wordle-answers-alphabetical.txt")
-
 	// styles
 	greenStyle  = lipgloss.NewStyle().Background(lipgloss.Color("#6aaa64")).Foreground(lipgloss.Color("#ffffff")).Padding(0, 1)
 	yellowStyle = lipgloss.NewStyle().Background(lipgloss.Color("#c9b458")).Foreground(lipgloss.Color("#000000")).Padding(0, 1)
@@ -36,6 +32,7 @@ type cell struct {
 }
 
 type model struct {
+	gameState       game.GameState
 	secret          string
 	guesses         [][]cell
 	current         []rune
@@ -48,7 +45,7 @@ type model struct {
 }
 
 func initialModel() model {
-	secret := pickSecret()
+	wordle := game.InitGame(wordLength, maxGuesses)
 	guesses := make([][]cell, maxGuesses)
 	for i := range maxGuesses {
 		line := make([]cell, wordLength)
@@ -58,7 +55,8 @@ func initialModel() model {
 		guesses[i] = line
 	}
 	return model{
-		secret:          secret,
+		gameState:       wordle,
+		secret:          wordle.GetAnswer(),
 		guesses:         guesses,
 		current:         []rune{},
 		row:             0,
@@ -68,12 +66,6 @@ func initialModel() model {
 		knownLetters:    make(map[rune]game.CellState),
 		allowDictionary: true, // set to false to skip dictionary check
 	}
-}
-
-func pickSecret() string {
-	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	// pick random from wordList
-	return strings.ToLower(choiceWords[rng.Intn(len(choiceWords))])
 }
 
 func (m model) Init() tea.Cmd {
@@ -167,6 +159,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			guess := runeSliceToString(m.current)
+
+			// TODO: need to be refactored - evaluation should be done in GameState
+			choiceWords := []string{"apple"}
+
 			if m.allowDictionary && !containsWord(choiceWords, guess) {
 				m.message = "Not in word list."
 				return m, nil
