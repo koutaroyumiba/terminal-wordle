@@ -195,7 +195,7 @@ func renderKeyboard(known map[rune]game.CellState) string {
 
 func (m model) View() string {
 	var b strings.Builder
-	b.WriteString(headerStyle.Render("Wordle"))
+	b.WriteString(headerStyle.Render("Terminal Wordle"))
 	b.WriteString("\n")
 
 	// render guesses so far
@@ -246,7 +246,7 @@ func (m model) View() string {
 
 func main() {
 	p := tea.NewProgram(initialModel())
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v\n", err)
 	}
 }
