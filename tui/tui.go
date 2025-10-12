@@ -32,7 +32,6 @@ type cell struct {
 
 type model struct {
 	gameState       game.GameState
-	secret          string
 	guesses         [][]cell
 	current         []rune
 	row             int
@@ -55,7 +54,6 @@ func initialModel() model {
 	}
 	return model{
 		gameState:       wordle,
-		secret:          wordle.GetAnswer(),
 		guesses:         guesses,
 		current:         []rune{},
 		row:             0,
@@ -266,7 +264,7 @@ func (m model) View() string {
 		if m.win {
 			b.WriteString(winningStyle.Render("\ncongrats\n"))
 		} else {
-			b.WriteString(losingStyle.Render(fmt.Sprintf("\ngg u suck, word: %s\n", m.secret)))
+			b.WriteString(losingStyle.Render(fmt.Sprintf("\ngg u suck, word: %s\n", m.gameState.GetAnswer())))
 		}
 		b.WriteString("\nPress r to play again, q to quit.\n")
 	}
