@@ -128,6 +128,8 @@ func (g *GameState) EvaluateGuess(guess string) ([]CellState, bool) {
 		}
 	}
 
+	g.updateKnownLetter(guess, guessResult)
+
 	won := false
 	if isCorrectGuess(guessResult) {
 		won = true
@@ -144,6 +146,16 @@ func isCorrectGuess(guess []CellState) bool {
 	}
 
 	return true
+}
+
+func (g GameState) updateKnownLetter(guess string, states []CellState) {
+	for i := range len(guess) {
+		char := rune(guess[i])
+		prev, ok := g.knownLetters[char]
+		if !ok || states[i] < prev {
+			g.knownLetters[char] = states[i]
+		}
+	}
 }
 
 // func (g GameState) GetAttempts() int {
@@ -164,4 +176,8 @@ func isCorrectGuess(guess []CellState) bool {
 
 func (g GameState) GetAnswer() string {
 	return g.answer
+}
+
+func (g GameState) GetKnown() map[rune]CellState {
+	return g.knownLetters
 }

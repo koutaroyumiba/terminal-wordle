@@ -31,14 +31,13 @@ type cell struct {
 }
 
 type model struct {
-	gameState    game.GameState
-	guesses      [][]cell
-	current      []rune
-	row          int
-	done         bool
-	win          bool
-	message      string
-	knownLetters map[rune]game.CellState // for keyboard hints
+	gameState game.GameState
+	guesses   [][]cell
+	current   []rune
+	row       int
+	done      bool
+	win       bool
+	message   string
 }
 
 func initialModel() model {
@@ -52,14 +51,13 @@ func initialModel() model {
 		guesses[i] = line
 	}
 	return model{
-		gameState:    wordle,
-		guesses:      guesses,
-		current:      []rune{},
-		row:          0,
-		done:         false,
-		win:          false,
-		message:      "Type letters, Backspace to delete, Enter to submit.",
-		knownLetters: make(map[rune]game.CellState),
+		gameState: wordle,
+		guesses:   guesses,
+		current:   []rune{},
+		row:       0,
+		done:      false,
+		win:       false,
+		message:   "Type letters, Backspace to delete, Enter to submit.",
 	}
 }
 
@@ -118,7 +116,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i := range wordLength {
 				m.guesses[m.row][i].r = m.current[i]
 				m.guesses[m.row][i].s = states[i]
-				updateKnownLetter(m.knownLetters, m.current[i], states[i])
 			}
 			if won {
 				m.done = true
@@ -140,14 +137,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, nil
-}
-
-func updateKnownLetter(known map[rune]game.CellState, r rune, s game.CellState) {
-	prev, ok := known[r]
-	// priority: correct > present > absent
-	if !ok || s > prev {
-		known[r] = s
-	}
 }
 
 func renderCell(c cell) string {
@@ -230,7 +219,7 @@ func (m model) View() string {
 
 	// keyboard
 	b.WriteString("Keyboard:\n")
-	b.WriteString(renderKeyboard(m.knownLetters))
+	b.WriteString(renderKeyboard(m.gameState.GetKnown()))
 	b.WriteString("\n\n")
 
 	// message
