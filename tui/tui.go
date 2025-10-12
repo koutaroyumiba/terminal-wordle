@@ -25,16 +25,9 @@ var (
 	headerStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ffffff")).MarginBottom(1)
 )
 
-type cell struct {
-	r rune
-	s game.CellState
-}
-
 type model struct {
 	gameState game.GameState
-	guesses   [][]cell
 	current   []rune
-	row       int
 	done      bool
 	win       bool
 	message   string
@@ -42,19 +35,10 @@ type model struct {
 
 func initialModel() model {
 	wordle := game.InitGame(wordLength, maxGuesses)
-	guesses := make([][]cell, maxGuesses)
-	for i := range maxGuesses {
-		line := make([]cell, wordLength)
-		for j := range wordLength {
-			line[j] = cell{r: ' ', s: game.StateEmpty}
-		}
-		guesses[i] = line
-	}
+
 	return model{
 		gameState: wordle,
-		guesses:   guesses,
 		current:   []rune{},
-		row:       0,
 		done:      false,
 		win:       false,
 		message:   "Type letters, Backspace to delete, Enter to submit.",
@@ -112,26 +96,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			// evaluate
-			states, won := m.gameState.EvaluateGuess(guess)
-			for i := range wordLength {
-				m.guesses[m.row][i].r = m.current[i]
-				m.guesses[m.row][i].s = states[i]
+			finished, won := m.gameState.EvaluateGuess(guess)
+			m.current = []rune{}
+			m.message = ""
+
+			if finished {
+				m.done = true
 			}
 			if won {
-				m.done = true
 				m.win = true
-				m.message = ""
-				return m, nil
 			}
-			m.row++
-			m.current = []rune{}
-			if m.row >= maxGuesses {
-				m.done = true
-				m.win = false
-				m.message = ""
-				return m, nil
-			}
-			m.message = ""
 		case tea.KeyCtrlC:
 			return m, tea.Quit
 		}
@@ -139,12 +113,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func renderCell(c cell) string {
+func renderCell(c game.Cell) string {
+	char, state := c.GetInfo()
 	ch := ' '
-	if c.r != ' ' && c.r != 0 {
-		ch = c.r
+	if char != ' ' && char != 0 {
+		ch = char
 	}
-	switch c.s {
+	switch state {
 	case game.StateCorrect:
 		return greenStyle.Render(string(ch))
 	case game.StatePresent:
@@ -156,7 +131,7 @@ func renderCell(c cell) string {
 	}
 }
 
-func renderRow(cells []cell) string {
+func renderRow(cells []game.Cell) string {
 	parts := make([]string, len(cells))
 	for i, c := range cells {
 		parts[i] = renderCell(c)
@@ -200,20 +175,7 @@ func (m model) View() string {
 
 	// render guesses so far
 	for i := range maxGuesses {
-		// if current row, display current typed letters and empties
-		if i == m.row && !m.done {
-			line := make([]cell, wordLength)
-			for j := range wordLength {
-				if j < len(m.current) {
-					line[j] = cell{r: m.current[j], s: game.StateEmpty}
-				} else {
-					line[j] = cell{r: ' ', s: game.StateEmpty}
-				}
-			}
-			b.WriteString(renderRow(line))
-		} else {
-			b.WriteString(renderRow(m.guesses[i]))
-		}
+		b.WriteString(renderRow(m.gameState.GetCurrentBoardRow(m.current, i)))
 		b.WriteString("\n\n")
 	}
 

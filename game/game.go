@@ -28,12 +28,19 @@ type Cell struct {
 	state CellState
 }
 
+func (c Cell) GetInfo() (rune, CellState) {
+	return c.char, c.state
+}
+
 type GameState struct {
 	answer          string
 	guessesResults  [][]Cell
 	knownLetters    map[rune]CellState
 	wordLength      int
+	maxGuesses      int
 	allowDictionary bool
+	currentRow      int
+	finished        bool
 }
 
 func InitGame(wordLength, maxGuesses int) GameState {
@@ -45,7 +52,10 @@ func InitGame(wordLength, maxGuesses int) GameState {
 		guessesResults:  board,
 		knownLetters:    make(map[rune]CellState),
 		wordLength:      wordLength,
+		maxGuesses:      maxGuesses,
 		allowDictionary: true,
+		currentRow:      0,
+		finished:        false,
 	}
 }
 
@@ -70,7 +80,10 @@ func InitGameWithWord(wordLength, maxGuesses int, correctWord string) GameState 
 		guessesResults:  board,
 		knownLetters:    make(map[rune]CellState),
 		wordLength:      wordLength,
+		maxGuesses:      maxGuesses,
 		allowDictionary: true,
+		currentRow:      0,
+		finished:        false,
 	}
 }
 
@@ -99,7 +112,7 @@ func (g GameState) ValidateWord(word string) (bool, string) {
 	return true, ""
 }
 
-func (g *GameState) EvaluateGuess(guess string) ([]CellState, bool) {
+func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
 	guessResult := make([]CellState, len(guess))
 	answerRunes := []rune(g.answer)
 	guessRunes := []rune(guess)
@@ -129,13 +142,18 @@ func (g *GameState) EvaluateGuess(guess string) ([]CellState, bool) {
 	}
 
 	g.updateKnownLetter(guess, guessResult)
+	g.updateState(guess, guessResult)
 
 	won := false
 	if isCorrectGuess(guessResult) {
+		g.finished = true
 		won = true
 	}
+	if g.currentRow >= g.maxGuesses {
+		g.finished = true
+	}
 
-	return guessResult, won
+	return g.finished, won
 }
 
 func isCorrectGuess(guess []CellState) bool {
@@ -148,8 +166,8 @@ func isCorrectGuess(guess []CellState) bool {
 	return true
 }
 
-func (g GameState) updateKnownLetter(guess string, states []CellState) {
-	for i := range len(guess) {
+func (g *GameState) updateKnownLetter(guess string, states []CellState) {
+	for i := range g.wordLength {
 		char := rune(guess[i])
 		prev, ok := g.knownLetters[char]
 		if !ok || states[i] < prev {
@@ -158,21 +176,31 @@ func (g GameState) updateKnownLetter(guess string, states []CellState) {
 	}
 }
 
-// func (g GameState) GetAttempts() int {
-// 	return len(g.guesses)
-// }
-//
-// func (g GameState) GetLetters() string {
-// 	return string(g.alphabet)
-// }
-//
-// func (g GameState) PrintBoard() {
-// 	fmt.Printf("== board (attempt %d) ==\n", len(g.guesses)+1)
-// 	for index, _ := range g.guesses {
-// 		fmt.Printf("\t%s\n", g.guesses[index])
-// 		fmt.Printf("\t%p\n", g.guessesResults[index])
-// 	}
-// }
+func (g *GameState) updateState(guess string, states []CellState) {
+	for i := range g.wordLength {
+		g.guessesResults[g.currentRow][i].char = rune(guess[i])
+		g.guessesResults[g.currentRow][i].state = states[i]
+	}
+
+	g.currentRow++
+}
+
+func (g GameState) GetCurrentBoardRow(currentWord []rune, index int) []Cell {
+	if index != g.currentRow || g.finished {
+		return g.guessesResults[index]
+	}
+
+	line := make([]Cell, g.wordLength)
+	for i := range g.wordLength {
+		char := ' '
+		if i < len(currentWord) {
+			char = currentWord[i]
+		}
+		line[i] = Cell{char: char, state: StateEmpty}
+	}
+
+	return line
+}
 
 func (g GameState) GetAnswer() string {
 	return g.answer
