@@ -10,8 +10,10 @@ import (
 type CellState int
 
 var (
-	inputFile  = "data/wordle-answers-alphabetical.txt"
-	dictionary = ProcessFile(inputFile)
+	dictionaryInputFile   = "data/valid-wordle-words.txt"
+	dictionary            = ProcessFile(dictionaryInputFile)
+	validAnswersInputFile = "data/wordle-answers-alphabetical.txt"
+	validAnswers          = ProcessFile(validAnswersInputFile)
 )
 
 const (
@@ -35,7 +37,7 @@ type GameState struct {
 }
 
 func InitGame(wordLength, maxGuesses int) GameState {
-	secret := pickRandomWord(dictionary)
+	secret := pickRandomWord(validAnswers)
 	board := initialiseEmptyBoard(wordLength, maxGuesses)
 
 	return GameState{
@@ -53,9 +55,8 @@ func pickRandomWord(words []string) string {
 	randomWord := "lmfao"
 	if len(words) > 0 {
 		randomWord = words[rng.Intn(len(words))]
-		fmt.Println("random word chosen")
 	} else {
-		fmt.Println("no words found")
+		fmt.Println("err: no words found")
 	}
 
 	return randomWord
