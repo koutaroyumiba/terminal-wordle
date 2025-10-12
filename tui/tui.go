@@ -31,15 +31,14 @@ type cell struct {
 }
 
 type model struct {
-	gameState       game.GameState
-	guesses         [][]cell
-	current         []rune
-	row             int
-	done            bool
-	win             bool
-	message         string
-	knownLetters    map[rune]game.CellState // for keyboard hints
-	allowDictionary bool                    // if true, only allow guesses in wordList
+	gameState    game.GameState
+	guesses      [][]cell
+	current      []rune
+	row          int
+	done         bool
+	win          bool
+	message      string
+	knownLetters map[rune]game.CellState // for keyboard hints
 }
 
 func initialModel() model {
@@ -53,15 +52,14 @@ func initialModel() model {
 		guesses[i] = line
 	}
 	return model{
-		gameState:       wordle,
-		guesses:         guesses,
-		current:         []rune{},
-		row:             0,
-		done:            false,
-		win:             false,
-		message:         "Type letters, Backspace to delete, Enter to submit.",
-		knownLetters:    make(map[rune]game.CellState),
-		allowDictionary: true, // set to false to skip dictionary check
+		gameState:    wordle,
+		guesses:      guesses,
+		current:      []rune{},
+		row:          0,
+		done:         false,
+		win:          false,
+		message:      "Type letters, Backspace to delete, Enter to submit.",
+		knownLetters: make(map[rune]game.CellState),
 	}
 }
 
@@ -91,18 +89,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			r := msg.Runes[0]
 			if len(m.current) < wordLength && ((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')) {
 				m.current = append(m.current, rune(strings.ToLower(string(r))[0]))
-				for i := range len(m.current) {
-					m.guesses[m.row][i].r = m.current[i]
-				}
 				m.message = ""
 			}
 			return m, nil
 		case tea.KeyBackspace:
 			if len(m.current) > 0 {
 				m.current = m.current[:len(m.current)-1]
-				for i := range len(m.current) {
-					m.guesses[m.row][i].r = m.current[i]
-				}
 			}
 			m.message = ""
 			return m, nil
@@ -122,13 +114,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			// evaluate
-			states, _ := m.gameState.EvaluateGuess(guess)
+			states, won := m.gameState.EvaluateGuess(guess)
 			for i := range wordLength {
 				m.guesses[m.row][i].r = m.current[i]
 				m.guesses[m.row][i].s = states[i]
 				updateKnownLetter(m.knownLetters, m.current[i], states[i])
 			}
-			if allCorrect(states) {
+			if won {
 				m.done = true
 				m.win = true
 				m.message = ""
@@ -156,15 +148,6 @@ func updateKnownLetter(known map[rune]game.CellState, r rune, s game.CellState) 
 	if !ok || s > prev {
 		known[r] = s
 	}
-}
-
-func allCorrect(states []game.CellState) bool {
-	for _, s := range states {
-		if s != game.StateCorrect {
-			return false
-		}
-	}
-	return true
 }
 
 func renderCell(c cell) string {
