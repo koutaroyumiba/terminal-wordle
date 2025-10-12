@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -79,7 +78,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "r", "R":
-				return initialModel(), nil
+				return initialModel(), tea.ClearScreen
 			case "q", "Q", "ctrl+c":
 				return m, tea.Quit
 			}
