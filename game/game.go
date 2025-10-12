@@ -33,6 +33,7 @@ func (c Cell) GetInfo() (rune, CellState) {
 }
 
 type GameState struct {
+	stats           Stats
 	answer          string
 	guessesResults  [][]Cell
 	knownLetters    map[rune]CellState
@@ -48,6 +49,7 @@ func InitGame(wordLength, maxGuesses int) GameState {
 	board := initialiseEmptyBoard(wordLength, maxGuesses)
 
 	return GameState{
+		stats:           loadStats(),
 		answer:          secret,
 		guessesResults:  board,
 		knownLetters:    make(map[rune]CellState),
@@ -76,6 +78,7 @@ func InitGameWithWord(wordLength, maxGuesses int, correctWord string) GameState 
 	board := initialiseEmptyBoard(wordLength, maxGuesses)
 
 	return GameState{
+		stats:           loadStats(),
 		answer:          correctWord,
 		guessesResults:  board,
 		knownLetters:    make(map[rune]CellState),
@@ -148,9 +151,28 @@ func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
 	if isCorrectGuess(guessResult) {
 		g.finished = true
 		won = true
-	}
-	if g.currentRow >= g.maxGuesses {
+
+		g.stats.GamesPlayed++
+		g.stats.Wins++
+		g.stats.CurrentStreak++
+		if g.stats.CurrentStreak > g.stats.MaxStreak {
+			g.stats.MaxStreak = g.stats.CurrentStreak
+		}
+
+		_, ok := g.stats.GuessFrequency[g.currentRow]
+		if ok {
+			g.stats.GuessFrequency[g.currentRow]++
+		} else {
+			g.stats.GuessFrequency[g.currentRow] = 1
+		}
+
+		saveStats(g.stats)
+	} else if g.currentRow >= g.maxGuesses {
 		g.finished = true
+		g.stats.GamesPlayed++
+		g.stats.CurrentStreak = 0
+
+		saveStats(g.stats)
 	}
 
 	return g.finished, won
@@ -208,4 +230,8 @@ func (g GameState) GetAnswer() string {
 
 func (g GameState) GetKnown() map[rune]CellState {
 	return g.knownLetters
+}
+
+func (g GameState) GetStats() Stats {
+	return g.stats
 }

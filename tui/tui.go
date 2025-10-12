@@ -194,6 +194,8 @@ func (m model) View() string {
 	winningStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#6aaa64"))
 	losingStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f87"))
 
+	stats := m.gameState.GetStats()
+
 	if m.done {
 		if m.win {
 			b.WriteString(winningStyle.Render("\ncongrats\n"))
@@ -201,6 +203,14 @@ func (m model) View() string {
 			b.WriteString(losingStyle.Render(fmt.Sprintf("\ngg u suck, word: %s\n", m.gameState.GetAnswer())))
 		}
 		b.WriteString("\nPress r to play again, q to quit.\n")
+
+		b.WriteString("\n--- Statistics ---\n")
+		b.WriteString(fmt.Sprintf("Games Played: %d\n", stats.GamesPlayed))
+		b.WriteString(fmt.Sprintf("Wins: %d\n", stats.Wins))
+		b.WriteString(fmt.Sprintf("Win Rate: %.1f%%\n", stats.WinRate()))
+		b.WriteString(fmt.Sprintf("Current Streak: %d\n", stats.CurrentStreak))
+		b.WriteString(fmt.Sprintf("Max Streak: %d\n", stats.MaxStreak))
+		b.WriteString(fmt.Sprintf("Avg Guesses (wins): %.2f\n", stats.AverageGuesses()))
 	}
 
 	return b.String()
