@@ -170,7 +170,7 @@ func renderKeyboard(known map[rune]game.CellState) string {
 
 func (m model) View() string {
 	var b strings.Builder
-	b.WriteString(headerStyle.Render("Terminal Wordle"))
+	b.WriteString(headerStyle.Render("Terminal Wordle (ctrl+c to exit)"))
 	b.WriteString("\n")
 
 	// render guesses so far
@@ -204,13 +204,28 @@ func (m model) View() string {
 		}
 		b.WriteString("\nPress r to play again, q to quit.\n")
 
-		b.WriteString("\n--- Statistics ---\n")
-		b.WriteString(fmt.Sprintf("Games Played: %d\n", stats.GamesPlayed))
-		b.WriteString(fmt.Sprintf("Wins: %d\n", stats.Wins))
-		b.WriteString(fmt.Sprintf("Win Rate: %.1f%%\n", stats.WinRate()))
-		b.WriteString(fmt.Sprintf("Current Streak: %d\n", stats.CurrentStreak))
-		b.WriteString(fmt.Sprintf("Max Streak: %d\n", stats.MaxStreak))
-		b.WriteString(fmt.Sprintf("Avg Guesses (wins): %.2f\n", stats.AverageGuesses()))
+	}
+
+	b.WriteString("\n--- Statistics ---\n")
+	b.WriteString(fmt.Sprintf("Games Played: %d\n", stats.GamesPlayed))
+	b.WriteString(fmt.Sprintf("Wins: %d\n", stats.Wins))
+	b.WriteString(fmt.Sprintf("Win Rate: %.1f%%\n", stats.WinRate()))
+	b.WriteString(fmt.Sprintf("Current Streak: %d\n", stats.CurrentStreak))
+	b.WriteString(fmt.Sprintf("Max Streak: %d\n", stats.MaxStreak))
+	b.WriteString(fmt.Sprintf("Avg Guesses (wins): %.2f\n", stats.AverageGuesses()))
+
+	distribution := stats.GuessFrequency
+	total := 0
+	for _, c := range distribution {
+		total += c
+	}
+
+	for i := range maxGuesses {
+		count, ok := distribution[i+1]
+		if !ok {
+			count = 0
+		}
+		b.WriteString(fmt.Sprintf("%d : %s[%d]\n", i+1, strings.Repeat("#", int(float64(count)/float64(total)*30)), count))
 	}
 
 	return b.String()
