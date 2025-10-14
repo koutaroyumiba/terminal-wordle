@@ -122,7 +122,7 @@ func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
 	counts := map[rune]int{}
 
 	// find all green
-	for i := range len(guess) {
+	for i := range guess {
 		if answerRunes[i] == guessRunes[i] {
 			guessResult[i] = StateCorrect
 		} else {
@@ -131,7 +131,7 @@ func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
 	}
 
 	// second pass (for yellow)
-	for i := range len(guess) {
+	for i := range guess {
 		if guessResult[i] == StateCorrect {
 			continue
 		}
@@ -234,4 +234,8 @@ func (g GameState) GetKnown() map[rune]CellState {
 
 func (g GameState) GetStats() Stats {
 	return g.stats
+}
+
+func (g GameState) GetGuesses() [][]Cell {
+	return g.guessesResults
 }

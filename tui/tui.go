@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"koutaroyumiba/wordle/bot"
+	"koutaroyumiba/wordle/game"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"koutaroyumiba/wordle/game"
 )
 
 const (
@@ -173,9 +175,13 @@ func (m model) View() string {
 	b.WriteString(headerStyle.Render("Terminal Wordle (ctrl+c to exit)"))
 	b.WriteString("\n")
 
+	guesses := m.gameState.GetGuesses()
+	bot := bot.InitBot(wordLength, maxGuesses)
+	length := bot.Analysis(guesses)
+
 	// render guesses so far
 	for i := range maxGuesses {
-		b.WriteString(renderRow(m.gameState.GetCurrentBoardRow(m.current, i)))
+		b.WriteString(fmt.Sprintf("%s  no. of words left: %d", renderRow(m.gameState.GetCurrentBoardRow(m.current, i)), length[i]))
 		b.WriteString("\n\n")
 	}
 
