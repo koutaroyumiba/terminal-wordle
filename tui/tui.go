@@ -98,7 +98,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			// evaluate
-			finished, won := m.gameState.EvaluateGuess(guess)
+			finished, won := m.gameState.ApplyGuess(guess)
 			m.current = []rune{}
 			m.message = ""
 

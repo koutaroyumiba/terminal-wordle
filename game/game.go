@@ -115,35 +115,8 @@ func (g GameState) ValidateWord(word string) (bool, string) {
 	return true, ""
 }
 
-func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
-	guessResult := make([]CellState, len(guess))
-	answerRunes := []rune(g.answer)
-	guessRunes := []rune(guess)
-	counts := map[rune]int{}
-
-	// find all green
-	for i := range guess {
-		if answerRunes[i] == guessRunes[i] {
-			guessResult[i] = StateCorrect
-		} else {
-			counts[answerRunes[i]]++
-		}
-	}
-
-	// second pass (for yellow)
-	for i := range guess {
-		if guessResult[i] == StateCorrect {
-			continue
-		}
-
-		if counts[guessRunes[i]] > 0 {
-			guessResult[i] = StatePresent
-			counts[guessRunes[i]]--
-		} else {
-			guessResult[i] = StateAbsent
-		}
-	}
-
+func (g *GameState) ApplyGuess(guess string) (bool, bool) {
+	guessResult := EvaluateGuess([]rune(g.answer), []rune(guess))
 	g.updateKnownLetter(guess, guessResult)
 	g.updateState(guess, guessResult)
 
@@ -176,6 +149,36 @@ func (g *GameState) EvaluateGuess(guess string) (bool, bool) {
 	}
 
 	return g.finished, won
+}
+
+func EvaluateGuess(answer, guess []rune) []CellState {
+	result := make([]CellState, len(guess))
+	counts := map[rune]int{}
+
+	// find all green
+	for i := range guess {
+		if answer[i] == guess[i] {
+			result[i] = StateCorrect
+		} else {
+			counts[answer[i]]++
+		}
+	}
+
+	// second pass (for yellow)
+	for i := range guess {
+		if result[i] == StateCorrect {
+			continue
+		}
+
+		if counts[guess[i]] > 0 {
+			result[i] = StatePresent
+			counts[guess[i]]--
+		} else {
+			result[i] = StateAbsent
+		}
+	}
+
+	return result
 }
 
 func isCorrectGuess(guess []CellState) bool {
