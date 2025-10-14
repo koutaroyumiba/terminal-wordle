@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ type model struct {
 	message   string
 }
 
-func initialModel() model {
+func InitialModel() model {
 	wordle := game.InitGame(wordLength, maxGuesses)
 
 	return model{
@@ -58,7 +58,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.KeyMsg:
 			switch msg.String() {
 			case "r", "R":
-				return initialModel(), tea.ClearScreen
+				return InitialModel(), tea.ClearScreen
 			case "q", "Q", "ctrl+c":
 				return m, tea.Quit
 			}
@@ -235,11 +235,4 @@ func (m model) View() string {
 	}
 
 	return b.String()
-}
-
-func main() {
-	p := tea.NewProgram(initialModel())
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v\n", err)
-	}
 }
