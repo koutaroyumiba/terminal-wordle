@@ -42,31 +42,37 @@ func (w WordleBot) Analysis(guesses [][]game.Cell) []int {
 }
 
 func isValid(guess []game.Cell, word string) bool {
+	guessResult := make([]game.CellState, len(guess))
 	answerRunes := []rune(word)
 	counts := map[rune]int{}
 
 	// find all green
 	for i := range guess {
-		char, state := guess[i].GetInfo()
-		if answerRunes[i] == char && state != game.StateCorrect {
-			return false
-		} else if answerRunes[i] != char {
+		char, _ := guess[i].GetInfo()
+		if answerRunes[i] == char {
+			guessResult[i] = game.StateCorrect
+		} else {
 			counts[answerRunes[i]]++
 		}
 	}
 
 	// second pass (for yellow)
 	for i := range guess {
-		char, state := guess[i].GetInfo()
-		if state == game.StateCorrect {
+		char, _ := guess[i].GetInfo()
+		if guessResult[i] == game.StateCorrect {
 			continue
 		}
-
-		if counts[char] > 0 && state != game.StatePresent {
-			return false
-		} else if counts[char] > 0 {
+		if counts[char] > 0 {
+			guessResult[i] = game.StatePresent
 			counts[char]--
-		} else if state != game.StateAbsent {
+		} else {
+			guessResult[i] = game.StateAbsent
+		}
+	}
+
+	for i := range guessResult {
+		_, state := guess[i].GetInfo()
+		if guessResult[i] != state {
 			return false
 		}
 	}
