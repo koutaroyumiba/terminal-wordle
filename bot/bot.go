@@ -19,14 +19,16 @@ func InitBot(wordLength, maxGuesses int) WordleBot {
 	}
 }
 
-func (w WordleBot) Analysis(guesses [][]game.Cell) []int {
+func (w WordleBot) Analysis(guesses [][]game.Cell) ([]int, [][]string) {
 	result := make([]int, w.maxGuesses)
+	wordResult := make([][]string, w.maxGuesses)
 	validWords := dictionary
 	for rowIndex := range w.maxGuesses {
 		newValidWords := []string{}
 		currGuess := guesses[rowIndex]
 		if rowIndex == 0 || rowIndex > 0 && len(validWords) != result[rowIndex-1] {
 			result[rowIndex] = len(validWords)
+			wordResult[rowIndex] = validWords
 		}
 
 		for _, word := range validWords {
@@ -38,7 +40,7 @@ func (w WordleBot) Analysis(guesses [][]game.Cell) []int {
 		validWords = newValidWords
 	}
 
-	return result
+	return result, wordResult
 }
 
 func isValid(guess []game.Cell, word string) bool {

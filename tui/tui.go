@@ -177,11 +177,19 @@ func (m model) View() string {
 
 	guesses := m.gameState.GetGuesses()
 	bot := bot.InitBot(wordLength, maxGuesses)
-	length := bot.Analysis(guesses)
+	length, words := bot.Analysis(guesses)
 
 	// render guesses so far
 	for i := range maxGuesses {
-		b.WriteString(fmt.Sprintf("%s  no. of words left: %d", renderRow(m.gameState.GetCurrentBoardRow(m.current, i)), length[i]))
+		b.WriteString(renderRow(m.gameState.GetCurrentBoardRow(m.current, i)))
+		b.WriteString(fmt.Sprintf("  no. of words left: %d", length[i]))
+		if m.done && len(words[i]) > 0 && len(words[i]) < 8 {
+			b.WriteString(" [")
+			for _, word := range words[i] {
+				b.WriteString(fmt.Sprintf(" %s ", word))
+			}
+			b.WriteString("]")
+		}
 		b.WriteString("\n\n")
 	}
 
