@@ -5,15 +5,15 @@ import (
 	"math/rand"
 	"slices"
 	"time"
+
+	"koutaroyumiba/wordle/data"
 )
 
 type CellState int
 
 var (
-	dictionaryInputFile   = "data/valid-wordle-words.txt"
-	dictionary            = ProcessFile(dictionaryInputFile)
-	validAnswersInputFile = "data/wordle-answers-alphabetical.txt"
-	validAnswers          = ProcessFile(validAnswersInputFile)
+	dictionary   = data.ValidWords5
+	validAnswers = data.ValidAnswers5
 )
 
 const (
