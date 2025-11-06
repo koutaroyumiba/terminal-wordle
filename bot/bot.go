@@ -1,10 +1,12 @@
 package bot
 
-import "koutaroyumiba/wordle/game"
+import (
+	"koutaroyumiba/wordle/data"
+	"koutaroyumiba/wordle/game"
+)
 
 var (
-	dictionaryInputFile = "data/valid-wordle-words.txt"
-	dictionary          = game.ProcessFile(dictionaryInputFile)
+	dictionary = data.ValidWords5
 )
 
 type WordleBot struct {
