@@ -1,35 +1,66 @@
 package game_tests
 
 import (
+	"fmt"
+	"koutaroyumiba/wordle/bot"
 	"koutaroyumiba/wordle/game"
 	"testing"
 )
 
-var input_file string = "../data/wordle-answers-alphabetical.txt"
+func TestWordleGame1(t *testing.T) {
+	wordLength := 5
+	maxGuesses := 6
+	wordle := game.InitGameWithWord(wordLength, maxGuesses, "spice")
+	wordleBot := bot.InitBot(wordLength, maxGuesses)
 
-func TestInit(t *testing.T) {
-	words := game.ProcessFile(input_file)
-	t.Run("testing initialisation of game", func(t *testing.T) {
-		gs := game.InitGame(words)
-		if gs.GetAttempts() != 0 {
-			t.Errorf("what attempt do we start with?! %d", gs.GetAttempts())
+	t.Run("guess #1: salet", func(t *testing.T) {
+		finished, won := wordle.EvaluateGuess("salet")
+		if finished {
+			t.Error("finished too soon: 1.salet")
+		}
+		if won {
+			t.Error("not won: 1.salet")
 		}
 	})
-}
-
-func TestWordleWordElate(t *testing.T) {
-	t.Run("testing elate", func(t *testing.T) {
-		gs := game.InitGameWithWord("elate")
-		if gs.GetAttempts() != 0 {
-			t.Errorf("what attempt do we start with?! %d", gs.GetAttempts())
+	t.Run("guess #2: spine", func(t *testing.T) {
+		finished, won := wordle.EvaluateGuess("spine")
+		if finished {
+			t.Error("finished too soon: 2.salet")
 		}
-		some, _ := gs.Guess("geese")
-		if some != "-^--x" {
-			t.Errorf("geese: should be -^--x, got %s", some)
-		}
-		some, _ = gs.Guess("teeth")
-		if some != "-^^x-" {
-			t.Errorf("teeth: should be -^^x-, got %s", some)
+		if won {
+			t.Error("not won: 2.spine")
 		}
 	})
+	t.Run("guess #3: spire", func(t *testing.T) {
+		finished, won := wordle.EvaluateGuess("spire")
+		if finished {
+			t.Error("finished too soon: 3.spire")
+		}
+		if won {
+			t.Error("not won: 3.spire")
+		}
+	})
+	t.Run("guess #4: spike", func(t *testing.T) {
+		finished, won := wordle.EvaluateGuess("spike")
+		if finished {
+			t.Error("finished too soon: 4.spike")
+		}
+		if won {
+			t.Error("not won: 4.spike")
+		}
+	})
+	t.Run("guess #5: spice", func(t *testing.T) {
+		finished, won := wordle.EvaluateGuess("spice")
+		if !finished {
+			t.Error("why is it not finished 5.spice")
+		}
+		if !won {
+			t.Error("why u no win 5.spice")
+		}
+	})
+
+	stuff := wordleBot.Analysis(wordle.GetGuesses())
+	for _, c := range stuff {
+		fmt.Printf("c: %d\n", c)
+	}
 }
