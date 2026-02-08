@@ -1,5 +1,5 @@
-// Package tui : package for the TUI
-package tui
+// Package ui : package for the TUI
+package ui
 
 import (
 	"fmt"
