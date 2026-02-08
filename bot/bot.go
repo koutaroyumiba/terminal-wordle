@@ -1,3 +1,4 @@
+// Package bot : package for the wordle bot
 package bot
 
 import (
@@ -5,15 +6,15 @@ import (
 	"koutaroyumiba/wordle/game"
 )
 
-var (
-	dictionary = data.ValidWords5
-)
+var dictionary = data.ValidWords5
 
+// WordleBot in charge of getting stuff
 type WordleBot struct {
 	wordLength int
 	maxGuesses int
 }
 
+// InitBot : initialises bot
 func InitBot(wordLength, maxGuesses int) WordleBot {
 	return WordleBot{
 		wordLength: wordLength,
@@ -21,6 +22,7 @@ func InitBot(wordLength, maxGuesses int) WordleBot {
 	}
 }
 
+// Analysis : analyse guess
 func (w WordleBot) Analysis(guesses [][]game.Cell) ([]int, [][]string) {
 	result := make([]int, w.maxGuesses)
 	wordResult := make([][]string, w.maxGuesses)
