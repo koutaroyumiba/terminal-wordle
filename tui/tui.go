@@ -1,3 +1,4 @@
+// Package tui : package for the TUI
 package tui
 
 import (
@@ -170,77 +171,99 @@ func renderKeyboard(known map[rune]game.CellState) string {
 	return strings.Join(outRows, "\n")
 }
 
-func (m model) View() string {
-	var b strings.Builder
-	b.WriteString(headerStyle.Render("Terminal Wordle (ctrl+c to exit)"))
-	b.WriteString("\n")
+func (m model) renderGame() string {
+	var lines []string
+	header := headerStyle.Render("Terminal Wordle (ctrl+c to exit)")
+	lines = append(lines, header, "")
 
 	guesses := m.gameState.GetGuesses()
 	bot := bot.InitBot(wordLength, maxGuesses)
 	length, words := bot.Analysis(guesses)
 
-	// render guesses so far
 	for i := range maxGuesses {
-		b.WriteString(renderRow(m.gameState.GetCurrentBoardRow(m.current, i)))
-		b.WriteString(fmt.Sprintf("  no. of words left: %d", length[i]))
+		row := renderRow(m.gameState.GetCurrentBoardRow(m.current, i))
+		row += fmt.Sprintf("  no. of words left: %d", length[i])
 		if m.done && len(words[i]) > 0 && len(words[i]) < 8 {
-			b.WriteString(" [")
+			row += " ["
 			for _, word := range words[i] {
-				b.WriteString(fmt.Sprintf(" %s ", word))
+				row += fmt.Sprintf(" %s ", word)
 			}
-			b.WriteString("]")
+			row += "]"
 		}
-		b.WriteString("\n\n")
+		lines = append(lines, row)
 	}
 
 	// keyboard
-	b.WriteString("Keyboard:\n")
-	b.WriteString(renderKeyboard(m.gameState.GetKnown()))
-	b.WriteString("\n\n")
+	lines = append(lines, "", "Keyboard:")
+	lines = append(lines, strings.Split(renderKeyboard(m.gameState.GetKnown()), "\n")...)
 
-	// message
-	if m.message != "" {
-		b.WriteString("msg: ")
-		b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("#ffffff")).Render(m.message))
-		b.WriteString("\n")
-	}
-
-	winningStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#6aaa64"))
-	losingStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f87"))
-
-	stats := m.gameState.GetStats()
-
+	// end game message
 	if m.done {
 		if m.win {
-			b.WriteString(winningStyle.Render("\ncongrats\n"))
+			lines = append(lines, "", lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#6aaa64")).Render("congrats"))
 		} else {
-			b.WriteString(losingStyle.Render(fmt.Sprintf("\ngg u suck, word: %s\n", m.gameState.GetAnswer())))
+			lines = append(lines, "", lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#ff5f87")).Render(fmt.Sprintf("gg u suck, word: %s", m.gameState.GetAnswer())))
 		}
-		b.WriteString("\nPress r to play again, q to quit.\n")
-
+		lines = append(lines, "Press r to play again, q to quit.")
 	}
 
-	b.WriteString("\n--- Statistics ---\n")
-	b.WriteString(fmt.Sprintf("Games Played: %d\n", stats.GamesPlayed))
-	b.WriteString(fmt.Sprintf("Wins: %d\n", stats.Wins))
-	b.WriteString(fmt.Sprintf("Win Rate: %.1f%%\n", stats.WinRate()))
-	b.WriteString(fmt.Sprintf("Current Streak: %d\n", stats.CurrentStreak))
-	b.WriteString(fmt.Sprintf("Max Streak: %d\n", stats.MaxStreak))
-	b.WriteString(fmt.Sprintf("Avg Guesses (wins): %.2f\n", stats.AverageGuesses()))
+	return strings.Join(lines, "\n")
+}
+
+func (m model) renderStats() string {
+	stats := m.gameState.GetStats()
+	var lines []string
+	lines = append(lines, headerStyle.Render("Statistics"), "")
+	lines = append(lines, fmt.Sprintf("Games Played: %d", stats.GamesPlayed))
+	lines = append(lines, fmt.Sprintf("Wins: %d", stats.Wins))
+	lines = append(lines, fmt.Sprintf("Win Rate: %.1f%%", stats.WinRate()))
+	lines = append(lines, fmt.Sprintf("Current Streak: %d", stats.CurrentStreak))
+	lines = append(lines, fmt.Sprintf("Max Streak: %d", stats.MaxStreak))
+	lines = append(lines, fmt.Sprintf("Avg Guesses (wins): %.2f", stats.AverageGuesses()))
 
 	distribution := stats.GuessFrequency
 	total := 0
 	for _, c := range distribution {
 		total += c
 	}
-
+	lines = append(lines, "", "Guess Distribution:")
 	for i := range maxGuesses {
 		count, ok := distribution[i+1]
 		if !ok {
 			count = 0
 		}
-		b.WriteString(fmt.Sprintf("%d : %s[%d]\n", i+1, strings.Repeat("#", int(float64(count)/float64(total)*30)), count))
+		bar := strings.Repeat("#", int(float64(count)/float64(total)*30))
+		lines = append(lines, fmt.Sprintf("%d : %s [%d]", i+1, bar, count))
 	}
 
-	return b.String()
+	return strings.Join(lines, "\n")
+}
+
+func (m model) renderMessage() string {
+	if m.message == "" {
+		return ""
+	}
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#ffffff")).
+		Render("msg: " + m.message)
+}
+
+func (m model) View() string {
+	gameView := m.renderGame()
+	statsView := m.renderStats()
+	messageView := m.renderMessage()
+
+	// Combine game and stats horizontally
+	mainContent := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		gameView,
+		lipgloss.NewStyle().MarginLeft(3).Render(statsView),
+	)
+
+	// Then put the message at the bottom
+	if messageView != "" {
+		return lipgloss.JoinVertical(lipgloss.Left, mainContent, "", messageView)
+	}
+
+	return mainContent
 }
