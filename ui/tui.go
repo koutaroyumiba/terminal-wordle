@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"koutaroyumiba/wordle/bot"
-	"koutaroyumiba/wordle/game"
+	"koutaroyumiba/wordle/internal/bot"
+	"koutaroyumiba/wordle/internal/game"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"

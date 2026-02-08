@@ -2,8 +2,8 @@
 package bot
 
 import (
-	"koutaroyumiba/wordle/data"
-	"koutaroyumiba/wordle/game"
+	"koutaroyumiba/wordle/internal/data"
+	"koutaroyumiba/wordle/internal/game"
 )
 
 var dictionary = data.ValidWords5

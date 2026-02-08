@@ -6,7 +6,7 @@ import (
 	"slices"
 	"time"
 
-	"koutaroyumiba/wordle/data"
+	"koutaroyumiba/wordle/internal/data"
 )
 
 type CellState int
